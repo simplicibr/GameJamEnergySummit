@@ -161,4 +161,63 @@ public class PlayerController : MonoBehaviour
     /// Permite que outros scripts consultem a stamina atual (ex: para fadiga visual).
     /// </summary>
     public float ObterStaminaAtual() => staminaAtual;
+
+    #region Sistema de Coleta por Stamina
+
+    private void OnTriggerEnter(Collider other)
+    {
+        TentarColetarItem(other.gameObject);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        TentarColetarItem(other.gameObject);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        TentarColetarItem(collision.gameObject);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        TentarColetarItem(collision.gameObject);
+    }
+
+    /// <summary>
+    /// Verifica se colidiu com um ItemDoChao e realiza a coleta gastando stamina.
+    /// </summary>
+    private void TentarColetarItem(GameObject obj)
+    {
+        ItemDoChao item = obj.GetComponent<ItemDoChao>();
+        if (item != null)
+        {
+            // O jogador só pode coletar se tiver pelo menos 10 de Stamina atual
+            if (staminaAtual >= 10f)
+            {
+                // Gasta instantaneamente 10 de stamina
+                staminaAtual -= 10f;
+                AtualizarUIStamina();
+
+                // Adiciona ao inventário
+                if (InventoryManager.Instance != null)
+                {
+                    InventoryManager.Instance.AdicionarRecurso(item.nomeDoItem, item.quantidade);
+                }
+                else
+                {
+                    Debug.LogWarning("[PlayerController] InventoryManager.Instance não encontrado!");
+                }
+
+                // Destrói o objeto coletado do chão
+                Destroy(obj);
+            }
+            else
+            {
+                Debug.Log($"[Coleta] Stamina insuficiente ({staminaAtual:0.0}/10.0) para coletar '{item.nomeDoItem}'!");
+            }
+        }
+    }
+
+    #endregion
 }
